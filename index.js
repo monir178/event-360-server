@@ -28,6 +28,21 @@ async function run() {
 
         const recentEventCollection = client.db('event360').collection('recentEvents');
 
+        /*****Recent Event Items Section*****/
+        //get recent events
+        app.get('/api/v1/recents', async (req, res) => {
+            const query = {}
+            const cursor = recentEventCollection.find(query);
+            const recentEvents = await cursor.toArray();
+
+            res.send({
+                success: true,
+                message: 'Successfully retrieved all recent events',
+                data: recentEvents
+            })
+        })
+
+
 
         /******Event Items Section*****/
         //add a new event
