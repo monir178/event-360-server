@@ -130,30 +130,32 @@ async function run() {
         app.patch('/api/v1/services/:id', async (req, res) => {
             const id = req.params.id;
             try {
-
-                const result = await serviceCollection.updateOne({
-                    _id: new ObjectId(id)
-                },
-                    { $set: req.body }
+                const { _id, ...updatedFields } = req.body; // Exclude _id from the updated fields
+                const result = await serviceCollection.updateOne(
+                    { _id: new ObjectId(id) },
+                    { $set: updatedFields } // Update only the other fields
                 );
                 if (result.matchedCount) {
-                    res.send({
+                    res.status(200).json({
                         success: true,
-                        message: "Service Updated successfully",
+                        message: "Service updated successfully",
                     });
                 } else {
-                    res.send({
+                    res.status(404).json({
                         success: false,
-                        error: "Couldn't update the service",
+                        error: "Service not found or couldn't be updated",
                     });
                 }
             } catch (error) {
-                res.send({
+                console.error("Error updating service:", error);
+                res.status(500).json({
                     success: false,
-                    error: "Couldn't update the service",
+                    error: "Internal server error",
                 });
             }
-        })
+        });
+
+
 
         //delete service
         app.delete('/api/v1/services/:id', async (req, res) => {
@@ -206,6 +208,28 @@ async function run() {
                         error: err.message,
                     }
                 )
+            }
+        })
+
+
+        //limit services
+        app.get('/api/v1/limit-services', async (req, res) => {
+            try {
+                const query = {};
+                const cursor = serviceCollection.find(query);
+                const limitedServices = await cursor.limit(3).toArray();
+
+                res.send({
+                    success: true,
+                    message: "Limited Services retrieved successfully",
+                    data: limitedServices
+                });
+            } catch (error) {
+                console.error(error.name, error.message)
+                res.send({
+                    success: false,
+                    error: error.message,
+                })
             }
         })
 
